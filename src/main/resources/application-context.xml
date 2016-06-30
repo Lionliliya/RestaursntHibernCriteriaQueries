@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+       http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+
+
+       <bean class="com.gmail.liliyayalovchenko.Main" id="main">
+              <property name="employeeController" ref="employeeController"/>
+              <property name="ingredientController" ref="ingredientController"/>
+              <property name="dishController" ref="dishController"/>
+              <property name="orderController" ref="orderController"/>
+              <property name="menuController" ref="menuController"/>
+              <property name="warehouseController" ref="warehouseController"/>
+              <property name="readyMealController" ref="readyMealController"/>
+       </bean>
+
+       <bean class="com.gmail.liliyayalovchenko.dao.hibernate.EmployeeDAOImpl" id="employeeDAO">
+              <property name="sessionFactory" ref="sessionFactory"/>
+       </bean>
+
+       <bean class="com.gmail.liliyayalovchenko.controllers.EmployeeController" id="employeeController">
+              <property name="employeeDAO" ref="employeeDAO"/>
+       </bean>
+
+       <bean class="com.gmail.liliyayalovchenko.dao.hibernate.DishDAOImpl" id="dishDAO">
+              <property name="sessionFactory" ref="sessionFactory"/>
+       </bean>
+
+       <bean class="com.gmail.liliyayalovchenko.controllers.DishController" id="dishController">
+              <property name="dishDAO" ref="dishDAO"/>
+       </bean>
+
+       <bean class="com.gmail.liliyayalovchenko.dao.hibernate.OrderDAOImpl" id="orderDAO">
+              <property name="sessionFactory" ref="sessionFactory"/>
+       </bean>
+
+       <bean class="com.gmail.liliyayalovchenko.controllers.OrderController" id="orderController">
+              <property name="orderDAO" ref="orderDAO"/>
+       </bean>
+
+       <bean class="com.gmail.liliyayalovchenko.dao.hibernate.IngredientDAOImpl" id="ingredientDAO">
+              <property name="sessionFactory" ref="sessionFactory"/>
+       </bean>
+
+       <bean class="com.gmail.liliyayalovchenko.controllers.IngredientController" id="ingredientController">
+              <property name="ingredientDAO" ref="ingredientDAO"/>
+       </bean>
+
+       <bean class="com.gmail.liliyayalovchenko.dao.hibernate.MenuDAOImpl" id="menuDAO">
+              <property name="sessionFactory" ref="sessionFactory"/>
+       </bean>
+
+       <bean class="com.gmail.liliyayalovchenko.controllers.MenuController" id="menuController">
+              <property name="menuDAO" ref="menuDAO"/>
+       </bean>
+
+       <bean class="com.gmail.liliyayalovchenko.dao.hibernate.WarehouseDAOImpl" id="warehouseDAO">
+              <property name="sessionFactory" ref="sessionFactory"/>
+              <property name="ingredientDAO" ref="ingredientDAO"/>
+       </bean>
+
+       <bean class="com.gmail.liliyayalovchenko.controllers.WarehouseController" id="warehouseController">
+              <property name="warehouseDAO" ref="warehouseDAO"/>
+       </bean>
+
+       <bean class="com.gmail.liliyayalovchenko.dao.hibernate.ReadyMealDAOImpl" id="readyMealDAO">
+              <property name="sessionFactory" ref="sessionFactory"/>
+       </bean>
+
+       <bean class="com.gmail.liliyayalovchenko.controllers.ReadyMealController" id="readyMealController">
+              <property name="readyMealDAO" ref="readyMealDAO"/>
+       </bean>
+
+</beans>

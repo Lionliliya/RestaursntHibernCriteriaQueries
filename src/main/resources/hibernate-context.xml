@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:tx="http://www.springframework.org/schema/tx"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+       http://www.springframework.org/schema/beans/spring-beans.xsd
+       http://www.springframework.org/schema/tx
+       http://www.springframework.org/schema/tx/spring-tx.xsd">
+
+
+       <bean class="com.mchange.v2.c3p0.ComboPooledDataSource" id="comboPooledDataSource">
+              <property name="driverClass" value="${jdbc.driver.class}"/>
+              <property name="jdbcUrl" value="${jdbc.url}"/>
+              <property name="user" value="${jdbc.user}"/>
+              <property name="password" value="${jdbc.password}"/>
+              <property name="minPoolSize" value="${jdbc.min.connections}"/>
+              <property name="maxPoolSize" value="${jdbc.max.connections}"/>
+              <property name="acquireIncrement" value="${jdbc.acquireIncrement}"/>
+       </bean>
+
+       <bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer" id="propertyPlaceholderConfigurer">
+              <property name="location" value="classpath:jdbc.properties"/>
+       </bean>
+
+       <bean id="sessionFactory" class="org.springframework.orm.hibernate5.LocalSessionFactoryBean">
+              <property name="dataSource" ref="comboPooledDataSource"/>
+              <property name="packagesToScan" value="com.gmail.liliyayalovchenko.domain"/>
+              <property name="hibernateProperties">
+                     <value>
+                            hibernate.dialect=org.hibernate.dialect.MySQL5Dialect
+                            hibernate.cache.region.factory_class=net.sf.ehcache.hibernate.EhCacheRegionFactory
+                            hibernate.cache.use_second_level_cache=true
+                     </value>
+
+              </property>
+
+       </bean>
+
+       <tx:annotation-driven transaction-manager="txManager" proxy-target-class="true"/>
+       <bean id="txManager" class="org.springframework.orm.hibernate5.HibernateTransactionManager">
+              <property name="sessionFactory" ref="sessionFactory"/>
+       </bean>
+</beans>
