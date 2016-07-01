@@ -39,6 +39,22 @@ public class EmployeeController {
     }
 
     @Transactional
+    public void printAllEmployeesName() {
+        LOGGER.info("Try to get all employees");
+        try {
+            List<Employee> all = employeeDAO.findAll();
+            LOGGER.info("All employees are got.");
+            for (Employee employee : all) {
+                System.out.println(employee.getSecondName() + " " + employee.getFirstName());
+            }
+
+        } catch (HibernateException ex) {
+            LOGGER.error("Cannot get all employees from database " + ex);
+        }
+
+    }
+
+    @Transactional
     public void printAllEmployee() {
         employeeDAO.findAll().forEach(System.out::println);
     }
@@ -56,8 +72,27 @@ public class EmployeeController {
             LOGGER.error("Wrong input. " + ex);
 
         }
+
         return byName;
     }
+
+    @Transactional
+    public void printEmployeeByName(String firstName, String secondName) {
+        Employee byName = null;
+        try {
+            byName = employeeDAO.findByName(firstName, secondName);
+
+        } catch (HibernateException ex) {
+            LOGGER.error("Cannot get employee by name from database " + ex);
+
+        } catch (RuntimeException ex) {
+            LOGGER.error("Wrong input. " + ex);
+
+        }
+        System.out.println(byName);
+    }
+
+
 
     @Transactional
     public void deleteEmployee(String firstName, String secondName) {

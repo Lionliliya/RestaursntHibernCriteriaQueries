@@ -31,14 +31,14 @@ public class Dish {
     @Column(name = "weight")
     private int weight;
 
-    @ManyToMany(fetch = FetchType.EAGER)
+    @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(name = "DISH_INGTREDIENTS",
             joinColumns = @JoinColumn(name = "dish_id"),
             inverseJoinColumns = @JoinColumn(name = "ingred_id"))
     @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
     private List<Ingredient> ingredients;
 
-    @ManyToOne(fetch=FetchType.EAGER)
+    @ManyToOne(fetch=FetchType.LAZY)
     @JoinColumn(name = "menu_id")
     private Menu menu;
 

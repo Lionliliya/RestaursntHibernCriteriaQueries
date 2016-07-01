@@ -42,7 +42,7 @@ public class DishController {
     @Transactional
     public void printAllDishes() {
         LOGGER.info("Start to print all dishes");
-        List<Dish> allDishes = getAllDishes();
+        List<Dish> allDishes = dishDAO.findAll();
         if (null != allDishes) {
             allDishes.forEach(System.out::println);
             LOGGER.info("All dishes are printed");
@@ -64,6 +64,20 @@ public class DishController {
            LOGGER.error("Error! " + ex);
        }
        return null;
+    }
+
+    @Transactional
+    public void printDishByName(String dishName) {
+        LOGGER.info("Try to get dish by name.");
+        try {
+            Dish dish = dishDAO.getDishByName(dishName);
+            LOGGER.info("Dish is got by name.");
+            System.out.println(dish);
+        } catch (HibernateException ex) {
+            LOGGER.error("Hibernate exception! " + ex);
+        } catch (RuntimeException ex) {
+            LOGGER.error("Error! " + ex);
+        }
     }
 
     @Transactional

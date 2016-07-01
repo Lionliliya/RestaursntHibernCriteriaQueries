@@ -66,7 +66,7 @@ public class WarehouseDAOImpl implements WarehouseDAO {
         criteria.add(Restrictions.eq("name", ingredientName));
         Ingredient ingredientResult = (Ingredient) criteria.list().get(0);
         criteria = session.createCriteria(Warehouse.class);
-        criteria.add(Restrictions.eq("ingredId", ingredientResult.getId()));
+        criteria.add(Restrictions.eq("ingredId", ingredientResult));
         Warehouse warehouse = (Warehouse) criteria.list().get(0);
         if (warehouse != null) {
             return warehouse;

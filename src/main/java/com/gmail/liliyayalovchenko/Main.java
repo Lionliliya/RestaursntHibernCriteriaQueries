@@ -6,6 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
+import org.springframework.transaction.UnexpectedRollbackException;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -145,8 +146,9 @@ public class Main {
         showAllDishNames();
         System.out.println("Enter dish name");
         String name = sc.next();
-        Dish dish = dishController.getDishByName(name);
-        System.out.println(dish != null ? dish : "Dish was nog retrieved. Error!");
+        //Dish dish = dishController.getDishByName(name);
+        //System.out.println(dish != null ? dish : "Dish was nog retrieved. Error!");
+        dishController.printDishByName(name);
     }
 
     private void deleteDish(Scanner sc) {
@@ -207,14 +209,19 @@ public class Main {
         while (true) {
             String ingre = sc.next();
             if (ingre.equals("f")) break;
-            Ingredient ingredientByName = ingredientController.getIngredientByName(ingre);
-            ingredientList.add(ingredientByName);
+            try {
+                Ingredient ingredientByName = ingredientController.getIngredientByName(ingre);
+                ingredientList.add(ingredientByName);
+                dish.setIngredients(ingredientList);
+                System.out.println("Enter name Of menu");
+                menuController.printMenuNames();
+                dish.setMenu(menuController.getMenuByName(sc.next()));
+                dishController.createDish(dish);
+            } catch (UnexpectedRollbackException ex) {
+                System.out.println("Error! Dish was not saved!");
+                LOGGER.error("Cant save dish with such parameters " + Arrays.toString(ex.getStackTrace()));
+            }
         }
-        dish.setIngredients(ingredientList);
-        System.out.println("Enter name Of menu");
-        menuController.printMenuNames();
-        dish.setMenu(menuController.getMenuByName(sc.next()));
-        dishController.createDish(dish);
     }
 
     private void showAllDishNames() {
@@ -271,59 +278,57 @@ public class Main {
     /**
      * Start private methods for employee page**/
     private void findEmployeeByName(Scanner sc) {
-        showAllEmplNames();
+        employeeController.printAllEmployeesName();
         System.out.println("Enter second name of employee");
         String secondName = sc.next();
         System.out.println("Enter first name of employee");
         String firstName = sc.next();
-        Employee employee = employeeController.getEmployeeByName(firstName, secondName);
-        System.out.println(employee != null ? employee : "Cannot get employee by this name");
-    }
-
-    private void showAllEmplNames() {
-        List<Employee> allEmployees = employeeController.getAllEmployees();
-        if (allEmployees != null) {
-            for (Employee employee : allEmployees) {
-                System.out.println(employee.getSecondName() + " " + employee.getFirstName());
-            }
-        } else {
-            System.out.println("List of employee is empty.");
+        try {
+            employeeController.printEmployeeByName(firstName, secondName);
+            //Employee employee = employeeController.getEmployeeByName(firstName, secondName);
+            //System.out.println(employee != null ? employee : "Cannot get employee by this name");
+        } catch (UnexpectedRollbackException ex) {
+            System.out.println("Error wile getting employee by this name ");
+            LOGGER.error("Error wile getting employee by this name " + ex);
         }
+
     }
 
     private void getAllEmployees() {
-//        List<Employee> employeeList = employeeController.getAllEmployees();
-//        if (employeeList != null) {
-//            employeeList.forEach(System.out::println);
-//        } else {
-//            System.out.println("List of employee is empty");
-//        }
         employeeController.printAllEmployee();
     }
 
     private void removeEmployee(Scanner sc) {
-        showAllEmplNames();
+        employeeController.printAllEmployeesName();
         System.out.println("Enter second name of employee to delete");
         String secondName = sc.next();
         System.out.println("Enter first name of employee");
         String firstName = sc.next();
-        employeeController.deleteEmployee(firstName, secondName);
+        try {
+            employeeController.deleteEmployee(firstName, secondName);
+        } catch (UnexpectedRollbackException ex) {
+            System.out.println("Error wile getting employee by this name ");
+            LOGGER.error("Error wile getting employee by this name " + ex);
+        }
     }
 
     private void addNewEmployee(Scanner sc) {
-        Employee employee = new Employee();
+        Employee employee;
         System.out.println("Enter Second name of new employee");
-        employee.setSecondName(sc.next());
+        String secondName = sc.next();
+        //employee.setSecondName(secondName);
         System.out.println("Enter First name of new employee");
-        employee.setFirstName(sc.next());
+        String firstName = sc.next();
+       // employee.setFirstName(firstName);
         System.out.println("Enter date of employment in format yyyy-mm-dd. For example, 2008-10-3");
         SimpleDateFormat format = new SimpleDateFormat("yyyy-mm-dd");
         Date date;
         try {
             date = format.parse(sc.next());
-            employee.setEmplDate(date);
+            //employee.setEmplDate(date);
             System.out.println("Enter phone");
-            employee.setPhone(sc.next());
+            String phone = sc.next();
+            //employee.setPhone(phone);
             int i = 1;
             for (Position p : Position.values()) {
                 System.out.println(p + " enter 0" + i++);
@@ -333,24 +338,39 @@ public class Main {
             Position positionOfEmployee;
             if (position.equals("01"))  {
                 positionOfEmployee = Position.ADMINISTRATOR;
+                employee = new Employee();
             } else if (position.equals("02")) {
                 positionOfEmployee = Position.SENIOUR_MANAGER;
+                employee = new Employee();
             } else if (position.equals("03")) {
                 positionOfEmployee = Position.MANAGER;
+                employee = new Employee();
             } else if (position.equals("04")) {
                 positionOfEmployee = Position.COOK;
+                employee = new Cook();
             } else if (position.equals("05")) {
                 positionOfEmployee = Position.WAITRESS;
+                employee = new Waiter();
             } else if (position.equals("06")) {
                 positionOfEmployee = Position.WAITER;
+                employee = new Waiter();
             } else {
                 positionOfEmployee = Position.NO_POSITION;
+                employee = new Employee();
                 LOGGER.error("Wrong input! " + position +"\nDefault position is NO_POSITION");
                 System.out.println("Wrong input. Default position is NO_POSITION.");
             }
             employee.setPosition(positionOfEmployee);
             System.out.println("Enter salary");
             employee.setSalary(sc.nextInt());
+            if (position.equals("04")) {
+                //enter list of readymeals
+                //employee.setReadymeals
+            } else if (position.equals("05") || position.equals("06")) {
+                //enter list of orders
+                //employee.setOrderList
+            }
+
             employeeController.createEmployee(employee);
         } catch (ParseException e) {
             LOGGER.error("Exception while parsing date" + e);
@@ -420,7 +440,13 @@ public class Main {
         while (true) {
             dishName = sc.next();
             if (dishName.equals("f")) break;
-            Dish dish = dishController.getDishByName(dishName);
+            Dish dish = null;
+            try {
+                dish = dishController.getDishByName(dishName);
+            } catch (UnexpectedRollbackException ex) {
+                System.out.println("Cannot find dish by this name! Dish was not added.");
+                LOGGER.error("Cannot find dish by name " + Arrays.toString(ex.getStackTrace()));
+            }
             if (dish!=null) dishList.add(dish);
         }
         menuController.addNewMenu(nameMenu, dishList);
@@ -429,7 +455,13 @@ public class Main {
     private void removeMenu(Scanner sc) {
         menuController.printMenuNames();
         System.out.println("Enter name of menu to delete");
-        Menu menu = menuController.getMenuByName(sc.next());
+        Menu menu = null;
+        try {
+            menu = menuController.getMenuByName(sc.next());
+        } catch (UnexpectedRollbackException ex) {
+            System.out.println("Wrong menu name!");
+            LOGGER.error("Cannot find menu by this name " + Arrays.toString(ex.getStackTrace()));
+        }
         if (menu != null) {
             menuController.removeMenu(menu);
         } else {
@@ -440,7 +472,12 @@ public class Main {
     private void getMenuByName(Scanner sc) {
         menuController.printMenuNames();
         System.out.println("Enter name of menu to see");
-        Menu menu = menuController.getMenuByName(sc.next());
+        Menu menu = null;
+        try {
+            menu = menuController.getMenuByName(sc.next());
+        } catch (UnexpectedRollbackException ex) {
+            LOGGER.error("Cannot find menu by this name " + Arrays.toString(ex.getStackTrace()));
+        }
         System.out.println(menu != null ? menu : "Cant find menu by this name.");
     }
 
@@ -451,11 +488,25 @@ public class Main {
     private void removeDishFromMenu(Scanner sc) {
         menuController.showAllMenus();
         System.out.println("Enter menu name you want to remove dish");
-        Menu menu = menuController.getMenuByName(sc.next());
+        Menu menu = null;
+        try {
+            String menuName = sc.next();
+            menu = menuController.getMenuByName(menuName);
+        } catch (UnexpectedRollbackException ex) {
+            System.out.println("Cannot find menu by this name " + menu);
+            LOGGER.error("Cannot find menu by this name " + Arrays.toString(ex.getStackTrace()));
+        }
         if (menu != null) {
             menu.getDishList().forEach(System.out::println);
             System.out.println("Enter dish name to remove");
-            Dish dish = dishController.getDishByName(sc.next());
+            String dishName = sc.next();
+            Dish dish = null;
+            try {
+                dish = dishController.getDishByName(dishName);
+            } catch (UnexpectedRollbackException ex) {
+                System.out.println("Cannot find dish by this name " + dishName);
+                LOGGER.error("Cannot find dish by this name " + Arrays.toString(ex.getStackTrace()));
+            }
             if (dish != null) {
                 menuController.removeDishFromMenu(menu.getId(), dish);
             } else {
@@ -469,17 +520,30 @@ public class Main {
     private void addDishToMenu(Scanner sc) {
         menuController.showAllMenus();
         System.out.println("Enter menu name you want to add dish");
-        Menu menu = menuController.getMenuByName(sc.next());
+        Menu menu = null;
+        try {
+            menu = menuController.getMenuByName(sc.next());
+        } catch (UnexpectedRollbackException ex) {
+            System.out.println("Cannot find menu with such name.");
+            LOGGER.error("Cannot find menu with such name! " + Arrays.toString(ex.getStackTrace()));
+        }
         if (menu != null) {
             showAllDishNames();
             System.out.println("Enter dish name to add to menu");
-            Dish dish = dishController.getDishByName(sc.next());
+            Dish dish = null;
+            try {
+                dish = dishController.getDishByName(sc.next());
+            } catch (UnexpectedRollbackException ex) {
+                System.out.println("Wrong menu name! Cannot find menu by this name.");
+                LOGGER.error("Cannot find dish by this name. " + Arrays.toString(ex.getStackTrace()));
+            }
             if (dish != null) {
                 menuController.addDishToMenu(menu.getId(), dish);
             } else {
                 System.out.println("Cannot add this dish to menu.");
             }
         } else {
+            LOGGER.info("Dish was not added to chosen menu.");
             System.out.println("Cannot add dish to chosen menu.");
         }
     }
@@ -533,7 +597,13 @@ public class Main {
     private void addDishToOpenOrder(Scanner sc) {
         System.out.println("Enter dish name");
         showAllDishNames();
-        Dish dish = dishController.getDishByName(sc.next());
+        Dish dish = null;
+        try {
+            dish = dishController.getDishByName(sc.next());
+        } catch (UnexpectedRollbackException ex) {
+            System.out.println("Cannot find dish with such name.");
+            LOGGER.error("Cannot find dish by this name " + Arrays.toString(ex.getStackTrace()));
+        }
         if (dish != null) {
             for (Order order : orderController.getOpenOrClosedOrder(OrderStatus.opened)) {
                 System.out.println("Order number " + order.getOrderNumber() + " ");
@@ -541,6 +611,7 @@ public class Main {
             System.out.println("Select number of order");
             orderController.addDishToOpenOrder(dish, sc.nextInt());
         } else {
+            LOGGER.info("Dish was not add to order.");
             System.out.println("Cannot add this dish.");
         }
     }
@@ -548,12 +619,18 @@ public class Main {
     private void createOrder(Scanner sc) {
         Order order = new Order();
         order.setOrderNumber(orderNumber++);
-        showAllEmplNames();
+        employeeController.printAllEmployeesName();
         System.out.println("Enter employee second name");
         String secondName = sc.next();
         System.out.println("Enter employee firstName");
         String firstName = sc.next();
-        Employee employee =  employeeController.getEmployeeByName(firstName, secondName);
+        Employee employee = null;
+        try {
+            employee = employeeController.getEmployeeByName(firstName, secondName);
+        } catch (UnexpectedRollbackException ex) {
+            System.out.println("Cant find employee with this name");
+            LOGGER.error("Cannot find employee with such name " + Arrays.toString(ex.getStackTrace()));
+        }
         if (employee != null) {
             order.setEmployeeId(employee);
             System.out.println("Enter table number");
@@ -569,8 +646,20 @@ public class Main {
                 name = sc.next();
                 if ("f".equals(name)) break;
                 System.out.println("You entered " + name);
-                Dish dishByName = dishController.getDishByName(name);
-                if (dishByName != null) dishForOrder.add(dishByName);
+                Dish dishByName = null;
+                try {
+                    dishByName = dishController.getDishByName(name);
+                } catch (UnexpectedRollbackException ex) {
+                    System.out.println("Cannot find dish with this name!");
+                    LOGGER.error("Cannot find dish by this name " + Arrays.toString(ex.getStackTrace()));
+                }
+                if (dishByName != null) {
+                    dishForOrder.add(dishByName);
+                    LOGGER.info("Dish was add to order.");
+                } else {
+                    System.out.println("Dish was not add!");
+                    LOGGER.info("Dish " + name + " was not add to order!");
+                }
             }
             order.setDishList(dishForOrder);
             orderController.saveOrder(order);
@@ -594,7 +683,12 @@ public class Main {
     private void changeOrderStatus(Scanner sc) {
         System.out.println("Enter number of order to change status to 'closed'");
         showOpenedOrdersNumb();
-        orderController.changeOrderStatus(sc.nextInt());
+        try {
+            orderController.changeOrderStatus(sc.nextInt());
+        } catch (UnexpectedRollbackException ex) {
+            System.out.println("Order status was not changed! Error!");
+            LOGGER.error("Cannot find order by this number of order " + Arrays.toString(ex.getStackTrace()));
+        }
     }
 
     private void showOpenedOrdersNumb() {
@@ -612,7 +706,12 @@ public class Main {
         System.out.println("Enter number of order to delete");
         showOpenedOrdersNumb();
         int orderNumber = sc.nextInt();
-        orderController.deleteOrder(orderNumber);
+        try {
+            orderController.deleteOrder(orderNumber);
+        } catch (UnexpectedRollbackException ex) {
+            System.out.println("Order was not removed. Wrong order number!");
+            LOGGER.error("Cannot remove order by this order number " + orderNumber + "\n" + Arrays.toString(ex.getStackTrace()));
+        }
     }
     /**
      * End of private methods for Order page**/
@@ -650,14 +749,20 @@ public class Main {
         ReadyMeal readyMeal = new ReadyMeal();
         showAllDishNames();
         System.out.println("Enter dish name");
-        Dish dish = dishController.getDishByName(sc.next());
+        Dish dish = null;
+        try {
+          dish = dishController.getDishByName(sc.next());
+        } catch (UnexpectedRollbackException ex) {
+            System.out.println("Cant find dish with this name!");
+            LOGGER.error("Cant find dish with this name " + Arrays.toString(ex.getStackTrace()));
+        }
 
         if (dish != null) {
             if (warehouseController.validateAmount(dish.getIngredients())) {
                 readyMeal.setDishId(dish);
 
                 readyMeal.setDishNumber(dish.getId());
-                showAllEmplNames();
+                employeeController.printAllEmployeesName();
                 System.out.println("Enter employee second name");
                 String secondName = sc.next();
                 System.out.println("Enter employee first name");
@@ -758,8 +863,14 @@ public class Main {
             }
 
             System.out.println("Enter name of ingredient");
-            Warehouse warehouse = warehouseController.findByName(sc.next());
-            System.out.println(warehouse != null ? warehouse : "There is no ingredient on warehouse with such name.");
+            try {
+                Warehouse warehouse = warehouseController.findByName(sc.next());
+                System.out.println(warehouse != null ? warehouse : "There is no ingredient on warehouse with such name.");
+            } catch (UnexpectedRollbackException ex) {
+                System.out.println("Cannot find ingredient on warehouse by this name");
+                LOGGER.error("Cannot find ingredient on warehouse by this name " + Arrays.toString(ex.getStackTrace()));
+            }
+
         } else {
             System.out.println("There is no ingredient on warehouse.");
         }
@@ -777,22 +888,32 @@ public class Main {
     private void changeAmountOfIngredient(Scanner sc) {
         showAllIngredNames();
         System.out.println("Enter name of ingredient to change it amount");
-        Ingredient ingredient = ingredientController.getIngredientByName(sc.next());
-        if (ingredient != null) {
-            System.out.println("Enter amount");
-            int amount = sc.nextInt();
-            System.out.println("If you want to increase amount enter y. If to decrease - n");
-            boolean increase = sc.next().equals("y");
-            warehouseController.changeAmount(ingredient, amount, increase);
-        } else {
-            System.out.println("There is no ingredient with such name ");
+        try {
+            Ingredient ingredient = ingredientController.getIngredientByName(sc.next());
+            if (ingredient != null) {
+                System.out.println("Enter amount");
+                int amount = sc.nextInt();
+                System.out.println("If you want to increase amount enter y. If to decrease - n");
+                boolean increase = sc.next().equals("y");
+                warehouseController.changeAmount(ingredient, amount, increase);
+            } else {
+                System.out.println("There is no ingredient with such name ");
+            }
+        } catch (UnexpectedRollbackException ex) {
+            System.out.println("Amount was not changed. Could not get ingredient by this name.");
+            LOGGER.error("Cant get ingredient by this name " + Arrays.toString(ex.getStackTrace()));
         }
     }
 
     private void removeIngredientByName(Scanner sc) {
         showAllIngredNames();
         System.out.println("Enter name of ingredient to remove");
-        warehouseController.removeIngredient(sc.next());
+        try {
+            warehouseController.removeIngredient(sc.next());
+        } catch (UnexpectedRollbackException ex) {
+            System.out.println("Ingredient by this name was not removed!");
+            LOGGER.error("Cant find ingredient by this name " + Arrays.toString(ex.getStackTrace()));
+        }
     }
 
     private void addNewIngredient(Scanner sc) {
@@ -803,9 +924,14 @@ public class Main {
             String ingredientName = sc.next();
             System.out.println("This ingredient is new in Ingredient department: 'y'/'n'");
             boolean newIngred = sc.next().equals("y");
-            Ingredient ingredient;
+            Ingredient ingredient = null;
             if (!newIngred) {
-                ingredient = ingredientController.getIngredientByName(ingredientName);
+                try {
+                    ingredient = ingredientController.getIngredientByName(ingredientName);
+                } catch (UnexpectedRollbackException ex) {
+                    System.out.println("Ingredient with this name was not saved");
+                    LOGGER.error("Cant find ingredient to warehouse with this name " + Arrays.toString(ex.getStackTrace()));
+                }
 
             } else {
                 ingredient = new Ingredient();
@@ -817,7 +943,7 @@ public class Main {
             if (ingredient != null) {
                 warehouseController.addIngredient(ingredient, amount);
             } else {
-                System.out.println("Cannot get ingredient by this name.");
+                System.out.println("Cannot add ingredient to warehouse with this name.");
             }
         } else {
             System.out.println("No ingredient is available");
